@@ -1,3 +1,4 @@
+#Nahom Kiros
 import random
 import numpy as np
 from matplotlib import pyplot as plt
