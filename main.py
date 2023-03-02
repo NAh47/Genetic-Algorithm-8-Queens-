@@ -1,8 +1,7 @@
-#Nahom Kiros
 import random
+import time
 import numpy as np
 from matplotlib import pyplot as plt
-
 
 # generates a random 8 queens configuration
 def rand_queens():
@@ -11,8 +10,7 @@ def rand_queens():
     queens[i] = random.randint(0, 7)
   return queens
 
-
-# calculates fitness of given a state, retruns state with fitness value
+# calculates fitness of given a state, returns state with fitness value
 def fitness(queens):
   fit_val = 0
   for i in range(8):
@@ -22,7 +20,6 @@ def fitness(queens):
       if abs(queens[i] - queens[j]) == (abs(i - j)):
         fit_val += 1
   return queens, 28 - fit_val
-
 
 # selects parent proportional to their fitness value, using roullete
 def selection(pop, pop_fit_val):
@@ -37,14 +34,12 @@ def selection(pop, pop_fit_val):
     if cumulative_fitness > r:
       return pop[i]
 
-
-#given 2 parents, it crossover at a random crossover point
+# given 2 parents, it cross-over at a random crossover point
 def crossover(parent1, parent2):
   cp = random.randint(1, len(parent1) - 1)
   offspring1 = parent1[:cp] + parent2[cp:]
   offspring2 = parent2[:cp] + parent1[cp:]
   return offspring1, offspring2
-
 
 # mutates the given 8 queens configuration ata random index for a random value(0-7)
 # returns a boolean(to check if solution is found within the given iteration),step count and list of average fitness.
@@ -53,7 +48,6 @@ def mutation(queen):
   mv = random.randint(0, 7)
   queen[mp] = mv
   return queen
-
 
 # runs the GA algorithm for the given iteration
 def run(given_iter):
@@ -67,6 +61,7 @@ def run(given_iter):
     print("STATE : " + str(population[i]) + "  FIT_VAL = " + str(pop_fit[i]))
   count = 0
   average_fit = []
+  best_fit = []
   for steps in range(step):
     for i in range(int(pop_size / 2)):
       q1 = selection(population, pop_fit)
@@ -78,34 +73,44 @@ def run(given_iter):
     population = offspring
     pop_fit = offspring_fit
     average_fit.append(np.mean(pop_fit))
+    best_fit.append(np.max(pop_fit))
     count += 1
-    if steps%10==0:
-      print("GEN : "+str(steps))
-    if 28 in pop_fit:
-      return True, count, average_fit
-  return False, count, average_fit
 
+    '''if steps%100==0: #prints generation per 100, to check how the algorithm affected the population
+      print("\nGENERATION : " + str(steps))
+      for i in range(pop_size):
+        print("STATE : " + str(population[i]) + "  FIT_VAL = " + str(pop_fit[i]))
+    '''
+    if 28 in pop_fit:
+      return True, count, average_fit,best_fit
+  return False, count, average_fit,best_fit
 
 if __name__ == "__main__":
-
-  iteration = 2000 #Number of generation
+  iteration = 20000 #Number of generation
   pop_size = 100 #population size per generation
   population = [0] * pop_size
   offspring = [0] * pop_size
   pop_fit = [0] * pop_size
   offspring_fit = [0] * pop_size
   ind = 0
-  check, steps_taken, average_fitness = run(iteration)
-  if check != False:
+  start=time.time()
+  check, steps_taken, average_fitness, best_fitness = run(iteration)
+  end = time.time()
+  print("\nTIME TAKEN : "+str(end-start))
+  print("POPULATION SIZE : "+str(pop_size))
+  if check:
     if 28 in pop_fit:
       ind = pop_fit.index(28)
     solution = population[ind]
     sol_fit = pop_fit[ind]
-    print("\nSOLUTION FOUND\nNUMBER OF GENERATIONS TAKEN: " + str(steps_taken))
+    print("SOLUTION FOUND\nNUMBER OF GENERATIONS TAKEN: " + str(steps_taken))
     print("SOLUTION STATE: " + str(solution) + " Fitness :" + str(sol_fit))
   else:
     print("NO SOLUTION FOUND WITHIN THE GIVEN ITERATION/POPULATION SIZE")
-  plt.plot(range(0, steps_taken), average_fitness)
+
+  plt.plot(range(0, steps_taken), average_fitness, label='Average Fitness')
+  plt.plot(range(0, steps_taken), best_fitness, label='Best Fitness')
   plt.xlabel("Generations taken")
-  plt.ylabel("Average Fitness")
+  plt.ylabel(" Fitness")
+  plt.legend()
   plt.show()
